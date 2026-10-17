@@ -1,0 +1,56 @@
+name: ${COMPOSE_PROJECT_NAME:?Run scripts/configure.py}
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: easyappointments
+      MARIADB_USER: hefesto_agenda
+      MARIADB_PASSWORD: ${DB_PASSWORD:?Generate .env}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Generate .env}
+    volumes: [database:/var/lib/mysql]
+    networks: [backend]
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    logging: &logging
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+  app:
+    image: hefesto-agenda:1.6.0
+    build: .
+    restart: unless-stopped
+    environment:
+      BASE_URL: https://${AGENDA_HOST:?Set domain}
+      DB_PASSWORD: ${DB_PASSWORD:?Generate .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?Generate .env}
+      MAIL_SMTP_HOST: ${SMTP_HOST:-127.0.0.1}
+      MAIL_SMTP_PORT: ${SMTP_PORT:-2525}
+      MAIL_SMTP_AUTH: ${SMTP_AUTH:-0}
+      MAIL_SMTP_USER: ${SMTP_USERNAME:-}
+      MAIL_SMTP_PASS: ${SMTP_PASSWORD:-}
+      MAIL_SMTP_CRYPTO: ${SMTP_CRYPTO:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM:-agenda@example.invalid}
+      MAIL_FROM_NAME: Hefesto Agenda
+    volumes: [storage:/var/www/html/storage]
+    expose: ["80"]
+    networks: [default, backend]
+    depends_on:
+      db: {condition: service_healthy}
+    healthcheck:
+      test: [CMD-SHELL, "curl -fsS --max-time 8 http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 10
+    logging: *logging
+volumes:
+  database:
+    name: ${DB_VOLUME:?Run scripts/configure.py}
+  storage:
+    name: ${STORAGE_VOLUME:?Run scripts/configure.py}
+networks:
+  backend:
+  default:
