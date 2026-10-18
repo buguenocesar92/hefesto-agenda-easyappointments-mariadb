@@ -110,9 +110,12 @@ awk '
         }
         next
     }
-' "$COMPOSE_FILE" | while IFS= read -r line; do
+' "$COMPOSE_FILE" > "$TMP_ENV.lines"
+while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
     report_failure "$line"
-done
+done < "$TMP_ENV.lines"
+rm -f "$TMP_ENV.lines"
 
 # Detecta servicios sin `profiles` mirando el YAML fuente (el render omite los
 # servicios con profiles activos cuando no se pide ese profile).
@@ -160,10 +163,10 @@ for svc in $services; do
     fi
 
     # Binds fuera del repo y bind a docker.sock.
-    bind_violations="$(printf '%s' "$RENDER_JSON" | jq -r --arg s "$svc" '
+    bind_violations="$(printf '%s' "$RENDER_JSON" | jq -r --arg s "$svc" --arg root "$REPO_ROOT" '
         .services[$s].volumes // [] | .[] | select(.type == "bind") |
         if (.source | test("docker\\.sock")) then "docker.sock"
-        elif (.source | test("^/|^~")) then ("bind absoluto: " + .source)
+        elif ((.source | startswith($root + "/")) or .source == $root) | not then ("bind fuera del repo: " + .source)
         else empty end
     ' 2>/dev/null || true)"
     if [[ -n "$bind_violations" ]]; then
@@ -179,4 +182,4 @@ if [[ "$failures" -gt 0 ]]; then
     exit 1
 fi
 
-echo "OK: compose.yaml cumple el contrato Coolify (1 servicio activo: app, db)."
+echo "OK: compose.yaml cumple el contrato Coolify (servicios revisados: $(echo $services | tr ' ' ','))."

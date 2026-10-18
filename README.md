@@ -33,7 +33,7 @@ Coolify consume `compose.yaml` como build pack Docker Compose, pone TLS y enruta
 - `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `ENCRYPTION_KEY` — secretos que conserva Coolify; regenerarlos borra la agenda.
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_AUTH`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_CRYPTO` y `MAIL_FROM` — credenciales reales del proveedor. Sin SMTP la app usa `127.0.0.1:2525` y no envía confirmaciones.
 
-Las variables `COMPOSE_PROJECT_NAME`, `DB_VOLUME` y `STORAGE_VOLUME` que escribe `scripts/configure.py` ya no son necesarias para Coolify; siguen siendo válidas para el flujo de legacy con `docker compose` directo.
+Las variables `DB_VOLUME` y `STORAGE_VOLUME` que escribe `scripts/configure.py` se ignoran en esta rama: el compose no las usa. Solo `COMPOSE_PROJECT_NAME` sigue vigente para el flujo directo con `docker compose`. Las instalaciones previas que dependan de los nombres fijos deben migrar sus datos a los volúmenes nuevos (respaldo con `scripts/backup.py` y restauración, ver `docs/RESPALDOS-TRASPASO.md`) o quedarse en `main`; de lo contrario un `up` con esta rama arranca con una base vacía.
 
 Antes de abrir el dominio:
 
