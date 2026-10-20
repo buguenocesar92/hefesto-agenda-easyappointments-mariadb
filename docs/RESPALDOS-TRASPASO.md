@@ -5,7 +5,7 @@ Verificar manifest.status=completed, salida del script y app activa. Las citas/c
 
 ## Recuperación en destino vacío
 1. Usar esta versión1.6.0 y validar hashes del manifest.
-2. Recuperar .env original con modo0600; conservar ENCRYPTION_KEY y contraseñas. Para pruebas cambiar nombres de proyecto y ambos volúmenes.
+2. Recuperar .env original con modo0600; conservar ENCRYPTION_KEY y contraseñas. Para pruebas cambiar el nombre de proyecto; los volúmenes los asigna Compose automáticamente.
 3. Construir imagen: `docker compose build`.
 4. `docker compose up -d db`; esperar healthy y verificar base easyappointments vacía. No sobrescribir una base con datos.
 5. `docker compose exec -T db sh -c 'MYSQL_PWD="$MARIADB_PASSWORD" mariadb -u "$MARIADB_USER" "$MARIADB_DATABASE"' < /ruta/respaldo/database.sql`

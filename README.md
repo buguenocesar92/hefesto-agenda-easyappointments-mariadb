@@ -25,6 +25,21 @@ Archivos revisados estáticamente. No se ha construido/ejecutado Docker aquí, i
 
 Python3.11+ para scripts y Docker Compose v2. Recurso inicial orientativo:2vCPU,2GB RAM y20GB SSD, ajustado según actividad/retención. No publicar el asistente inicial en Internet.
 
+## Despliegue en Coolify (MVP Hefesto)
+
+Coolify consume `compose.yaml` como build pack Docker Compose, pone TLS y enruta el dominio al servicio `app` por Traefik. El compose no expone puertos, no nombra volúmenes ni fija el nombre de proyecto; Coolify asigna todo eso. Configurar en Coolify únicamente estas variables:
+
+- `AGENDA_HOST` — dominio público (sin esquema); se usa para `BASE_URL` y cookies seguras.
+- `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `ENCRYPTION_KEY` — secretos que conserva Coolify; regenerarlos borra la agenda.
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_AUTH`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_CRYPTO` y `MAIL_FROM` — credenciales reales del proveedor. Sin SMTP la app usa `127.0.0.1:2525` y no envía confirmaciones.
+
+Las variables `DB_VOLUME` y `STORAGE_VOLUME` que escribe `scripts/configure.py` se ignoran en esta rama: el compose no las usa. Solo `COMPOSE_PROJECT_NAME` sigue vigente para el flujo directo con `docker compose`. Las instalaciones previas que dependan de los nombres fijos deben migrar sus datos a los volúmenes nuevos (respaldo con `scripts/backup.py` y restauración, ver `docs/RESPALDOS-TRASPASO.md`) o quedarse en `main`; de lo contrario un `up` con esta rama arranca con una base vacía.
+
+Antes de abrir el dominio:
+
+1. Completar el asistente nativo de la aplicación (empresa y administrador) por acceso privado, reenvío de puerto o túnel SSH; nunca por HTTPS público. Si reaparece, retirar el dominio y revisar volúmenes.
+2. Configurar SMTP real y probar el envío antes de admitir reservas. Con el SMTP por defecto no salen notificaciones.
+
 ## Licencia y alcance
 Easy!Appointments conserva GPLv3 para código y CC BY3.0 para su contenido según upstream. Mantener avisos y obligaciones de redistribución. Hefesto cobra instalación, configuración, formación y soporte.
 
